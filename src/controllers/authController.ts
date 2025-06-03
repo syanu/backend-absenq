@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
-
 import bcrypt from "bcrypt";
 import User from "../models/User";
 import jwt from "jsonwebtoken";
+
 export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const { email, password } = req.body;
@@ -42,15 +42,6 @@ export const register = async (req: Request, res: Response, next: NextFunction):
     }
 };
 
-const tambahData = async (paylaod: {
-    nama: string, email: string, password: string, role: "admin" | "user"
-}) => {
-    const bcryptPwd = await bcrypt.genSalt(15);
-    const passwordTerenkripsi = await bcrypt.hash(paylaod.password, bcryptPwd);
-    const userModel = new User({
-        ...paylaod,
-        password: passwordTerenkripsi
-    });
-    await userModel.save();
-    return userModel
-}
+export const logout = async (req: Request, res: Response): Promise<void> => {
+    res.status(200).json({ message: "Logout berhasil. Silakan hapus token di sisi klien." });
+};
