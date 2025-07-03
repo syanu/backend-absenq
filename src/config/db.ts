@@ -5,8 +5,9 @@ dotenv.config();
 
 const connectDB = async () => {
     try {
-        await mongoose.connect(process.env.ATLAS_MONGO_URL as string,{
-            dbName:'absensiz'
+        const urlDB = process.env.NODE_ENV === 'production' ? process.env.ATLAS_MONGO_URL : process.env.MONGO_URl;
+        await mongoose.connect(urlDB as string, {
+            dbName: 'absensiz'
         });
         console.log("Database Connected");
     } catch (error) {

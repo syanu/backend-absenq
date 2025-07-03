@@ -6,42 +6,42 @@ import jwt from "jsonwebtoken";
 export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const { email, password } = req.body;
-        const userModel = await User.findOne({ email });
-        if (!userModel) {
-            res.status(404).json({ message: "User tidak tersedia" });
+        const user = await User.findOne({ email }).select("+password");
+        if (!user) {
+            res.status(404).json({ message: "User not found" });
             return;
         }
-        const isMatch = await bcrypt.compare(password, userModel.password);
+        const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            res.status(401).json({ message: "Password salah" });
+            res.status(401).json({ message: "Incorrect password" });
             return;
         }
-        const token = jwt.sign({ id: userModel._id, role: userModel.role }, process.env.JWT_SECRET as string);
-        res.status(200).json({ message: "Login Berhasil", data: userModel, token: token });
+        const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET as string);
+        const { password: _, ...safeUser } = user.toObject();
+        res.status(200).json({ message: "Login successful", data: safeUser, token: token });
     } catch (error) {
-        console.error(error);
-
         next(error);
     }
 };
 
 export const register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const { nama, email, password, role } = req.body;
+        const { name, email, password, role } = req.body;
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            res.status(400).json({ message: "Email sudah digunakan" });
+            res.status(400).json({ message: "Email is already in use" });
             return;
         }
         const hashedPassword = await bcrypt.hash(password, 10);
-        const userModel = new User({ nama, email, password: hashedPassword, role: role });
+        const userModel = new User({ name, email, password: hashedPassword, role });
         await userModel.save();
-        res.status(201).json({ message: "Registrasi berhasil", data: userModel });
+        const { password: _, ...safeUser } = userModel.toObject();
+        res.status(201).json({ message: "Registration successful", data: safeUser });
     } catch (error) {
         next(error);
     }
 };
 
 export const logout = async (req: Request, res: Response): Promise<void> => {
-    res.status(200).json({ message: "Logout berhasil. Silakan hapus token di sisi klien." });
+    res.status(200).json({ message: "Logout successful" });
 };
