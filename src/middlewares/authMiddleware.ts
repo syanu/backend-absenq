@@ -6,7 +6,7 @@ export const verifyToken = (req: AuthRequest, res: Response, next: NextFunction)
     const token = req.header("Authorization")?.split(" ")[1];
 
     if (!token) {
-        res.status(401).json({ message: "Akses ditolak" });
+        res.status(401).json({ message: "Access denied. No token provided." });
         return;
     }
 
@@ -15,7 +15,7 @@ export const verifyToken = (req: AuthRequest, res: Response, next: NextFunction)
         req.user = verified;
         next();
     } catch (err) {
-        res.status(400).json({ message: "Token tidak valid" });
+        res.status(400).json({ message: "Invalid token" });
     }
 };
 
@@ -24,7 +24,7 @@ export const verifyRole = (allowedRole: 'admin' | 'user'): RequestHandler => {
         const user = req.user as JwtPayload;
 
         if (!user || user.role !== allowedRole) {
-            res.status(403).json({ message: 'Access denied' });
+            res.status(403).json({ message: `Access denied. Only '${allowedRole}' role is allowed.` });
             return;
         }
 

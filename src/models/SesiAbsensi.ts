@@ -13,7 +13,7 @@ interface ISesiAbsensi extends Document {
 }
 
 const SesiAbsensiSchema = new mongoose.Schema<ISesiAbsensi>({
-    user_id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    user_id: { type: mongoose.Schema.Types.ObjectId, ref: "Users", required: true },
     name: { type: String, required: true },
     location_name: { type: String, required: false },
     location_lat: { type: String, required: false },
