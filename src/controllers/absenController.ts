@@ -2,7 +2,7 @@ import { Response } from "express";
 import { AuthRequest } from "../types/AuthRequest";
 import SesiAbsensi from "../models/SesiAbsensi";
 import Absensi from "../models/Absensi";
-import { checkDistanceToTarget } from "../utils/distance";
+import { validateUserProximity } from "../utils/distance";
 import mongoose from "mongoose";
 
 export const overviewAbsen = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -112,7 +112,7 @@ export const adminListAbsenDump = async (req: AuthRequest, res: Response): Promi
 
         res.status(200).json({
             message: "Berhasil mengambil data absensi",
-            data:data
+            data: data
         });
 
     } catch (error) {
@@ -170,15 +170,31 @@ export const absen = async (req: AuthRequest, res: Response): Promise<void> => {
             return;
         }
 
-        // const now = new Date();
-        // if (now < sesi.date_start || now > sesi.date_end) {
-        //     res.status(400).json({ message: "Outside of attendance time window" });
-        //     return;
-        // }
+        const now = new Date();
+        if (now < sesi.date_start || now > sesi.date_end) {
+            res.status(400).json({ message: "Outside of attendance time window" });
+            return;
+        }
 
         const existing = await Absensi.findOne({ user_id: req.user?.id, sesi_id });
         if (existing) {
             res.status(400).json({ message: "You have already checked in for this session" });
+            return;
+        }
+
+        const { distance, isWithinRange } = validateUserProximity(
+            location_lat,
+            location_lng,
+            parseFloat(String(sesi.location_lat)),
+            parseFloat(String(sesi.location_lng)),
+            800
+        );
+
+        if (!isWithinRange) {
+            res.status(400).json({
+                message: "You are outside the allowed location range",
+                distance: `${distance.toFixed(2)} meters`,
+            });
             return;
         }
 
