@@ -1,35 +1,38 @@
-const R = 6371000; // Radius bumi dalam meter
-const MAX_DISTANCE = 363000; // Maksimum jangkauan dalam meter
-
-// Titik target tetap
-const TARGET_LAT = -7.8111057;
-const TARGET_LNG = 112.0046051;
-
-const toRad = (value: number): number => (value * Math.PI) / 180;
-
 /**
- * Menghitung jarak dari lokasi pengguna ke lokasi target tetap dan cek jangkauan.
+ * Menghitung jarak antara lokasi pengguna dan lokasi target menggunakan rumus Haversine,
+ * serta memeriksa apakah jaraknya berada dalam batas yang diizinkan.
+ *
  * @param userLat - Latitude pengguna
  * @param userLng - Longitude pengguna
- * @returns Object: { distance: number, isWithinRange: boolean }
+ * @param targetLat - Latitude target
+ * @param targetLng - Longitude target
+ * @param maxDistance - Jarak maksimum yang diizinkan dalam meter (default: 363000)
+ * @returns Object berisi jarak dalam meter dan status apakah masih dalam jangkauan
  */
-export function checkDistanceToTarget(
+export function validateUserProximity(
   userLat: number,
-  userLng: number
+  userLng: number,
+  targetLat: number,
+  targetLng: number,
+  maxDistance: number = 363000
 ): { distance: number; isWithinRange: boolean } {
-  const dLat = toRad(TARGET_LAT - userLat);
-  const dLon = toRad(TARGET_LNG - userLng);
+  const EARTH_RADIUS = 6371000; // Radius bumi dalam meter
+
+  const toRadians = (degrees: number): number => (degrees * Math.PI) / 180;
+
+  const deltaLat = toRadians(targetLat - userLat);
+  const deltaLng = toRadians(targetLng - userLng);
 
   const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(userLat)) * Math.cos(toRad(TARGET_LAT)) *
-    Math.sin(dLon / 2) ** 2;
+    Math.sin(deltaLat / 2) ** 2 +
+    Math.cos(toRadians(userLat)) * Math.cos(toRadians(targetLat)) *
+    Math.sin(deltaLng / 2) ** 2;
 
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distance = R * c;
+  const centralAngle = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = EARTH_RADIUS * centralAngle;
 
   return {
     distance,
-    isWithinRange: distance <= MAX_DISTANCE,
+    isWithinRange: distance <= maxDistance,
   };
 }
